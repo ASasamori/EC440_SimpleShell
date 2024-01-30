@@ -18,3 +18,10 @@ void pipeline_free(struct pipeline *pipeline)
 {
 	// TODO: Implement this function
 }
+
+//Created new pipeline command function to test functionality before
+struct pipeline_command *command_build(const char *command_line)
+{
+  //Including a 'for' loop to look for the whitespaces and pipeline biulds
+  return NULL;
+}
