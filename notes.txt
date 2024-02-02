@@ -1,0 +1,6 @@
+if print ls return, could read that from the input. fork the child and exec what the parent __DBL_DIG__
+wait until the child completes.
+just read ls or date or whatever command or no command and fork child and having the child running
+and read the parents
+read the same data the child went in
+wait pid-1, don't care what the child is
