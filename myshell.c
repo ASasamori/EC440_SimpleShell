@@ -6,15 +6,25 @@
 
 #include "myshell_parser.h"
 
-readline()
+char *readline(void)
+{
+    char *line = NULL;
+    size_t bufsize = 0;
+    getline(&line, &bufsize, stdin);
+    return line;
+}
+evaluate(char *line)
 {
 }
-evaluate()
+
+void execute(struct pipeline *pipeline)
 {
 }
-printShell()
-{
-}
+
+// Just included print option to print but I don't know if this necessary so far
+// printShell()
+// {
+// }
 
 void shellLoop()
 {
@@ -27,24 +37,10 @@ void shellLoop()
         printf("my_shell$ ");
         read = readline();
         evaluate = evaluate();
-        printShell = printShell();
+        // print = print();
 
     } while (status);
 }
-
-// create a simple ls command working.
-// one pipe two children to pipe with ls count working
-// Even though can't fork one process and wait for it to complete
-// Duping with the children.
-// waiting for that to complete and read side of the pipe
-// wc command in the sam example
-// Close the write side of the pipe
-// Run it in parallel, going to block and run it in the back
-// While still child outstanding.
-// Wait pid while child is waiting
-// close the pipe so the parent is doing the pipe command
-// Make sure to not blindly malloc a command to make sure it works
-// Redirect need to use dupe
 
 int main(int argc, char **argv)
 {
