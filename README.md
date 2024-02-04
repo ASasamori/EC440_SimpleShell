@@ -12,7 +12,5 @@ Two example test programs that exercise the interface of the parser, discussed [
 - [test_simple_input.c](test_simple_input.c): Tests parsing the command 'ls'
 - [test_simple_pipe.c](test_simple_pipe.c): Tests parsing the command 'ls | cat`
 
-Please modify this README.md file to describe any interesting strategy you used to develop the parser and list any references to resources you used to develop your solution. Also, please add a line above for each test program you develop.
-
 Got information from the blog of https://brennan.io/2015/01/16/write-a-shell-in-c/
 Subsequently, used the code from the blog as a guideline: https://github.com/brenns10/lsh/blob/407938170e8b40d231781576e05282a41634848c/src/main.c
