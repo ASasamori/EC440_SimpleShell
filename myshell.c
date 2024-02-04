@@ -6,8 +6,30 @@
 
 #include "myshell_parser.h"
 
+readline()
+{
+}
+evaluate()
+{
+}
+printShell()
+{
+}
+
 void shellLoop()
 {
+    char *line;
+    char **args;
+    int status = 1;
+
+    do
+    {
+        printf("my_shell$ ");
+        read = readline();
+        evaluate = evaluate();
+        printShell = printShell();
+
+    } while (status);
 }
 
 // create a simple ls command working.
