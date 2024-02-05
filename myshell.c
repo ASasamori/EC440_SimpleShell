@@ -5,14 +5,6 @@
 #include <string.h>
 
 #include "myshell_parser.h"
-
-char *readline(void)
-{
-    char *line = NULL;
-    size_t bufsize = 0;
-    getline(&line, &bufsize, stdin);
-    return line;
-}
 evaluate(char *line)
 {
     struct pipeline *pipeline = pipeline_build(line);
@@ -25,32 +17,30 @@ evaluate(char *line)
     {
         printf("Command not supported: \n");
     }
-
+    // err = execvp(command->command_args[0],command->command_args);
+    // Supports all these commands
     pipeline_free(pipeline);
 }
 
+// Nested function only for usage of evaluate()
 void execute(struct pipeline *pipeline)
 {
     pid_t pid = fork();
 }
 
-// Just included print option to print but I don't know if this necessary so far
-// printShell()
-// {
-// }
-
 void shellLoop()
 {
-    char *line;
     char **args;
     int status = 1;
 
     do
     {
         printf("my_shell$ ");
-        line = readline();
-        evaluate(line);
-        // print = print();
+        pipeline_build(args);
+        status = evaluate(args);
+
+        pipeline_free(args);
+        free(args);
 
     } while (status);
 }
