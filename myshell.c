@@ -5,11 +5,10 @@
 #include <string.h>
 
 #include "myshell_parser.h"
-evaluate(char *line)
+int evaluate(char *line)
 {
     struct pipeline *pipeline = pipeline_build(line);
-
-    if (pipeline != NULL && strcmp(pipeline->commands->command_args[0], "ls") == 0)
+    if (pipeline != NULL)
     {
         execute(pipeline);
     }
@@ -17,8 +16,6 @@ evaluate(char *line)
     {
         printf("Command not supported: \n");
     }
-    // err = execvp(command->command_args[0],command->command_args);
-    // Supports all these commands
     pipeline_free(pipeline);
 }
 
@@ -26,6 +23,25 @@ evaluate(char *line)
 void execute(struct pipeline *pipeline)
 {
     pid_t pid = fork();
+    if (pid == 0)
+    {
+        // Child process to execute
+        if (execvp(pipeline->commands->command_args[0], pipeline->commands->command_args) == -1)
+        {
+            perror("my_shell");
+        }
+        exit(EXIT_FAILURE);
+    }
+    else if (pid < 0)
+    {
+        // Error forking
+        perror("my_shell");
+    }
+    else
+    {
+        // Parent process
+        wait(NULL);
+    }
 }
 
 void shellLoop()
