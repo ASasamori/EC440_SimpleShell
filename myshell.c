@@ -5,21 +5,6 @@
 #include <string.h>
 
 #include "myshell_parser.h"
-int evaluate(char *line)
-{
-    struct pipeline *pipeline = pipeline_build(line);
-    if (pipeline != NULL)
-    {
-        execute(pipeline);
-    }
-    else
-    {
-        printf("Command not supported: \n");
-    }
-    pipeline_free(pipeline);
-}
-
-// Nested function only for usage of evaluate()
 void execute(struct pipeline *pipeline)
 {
     pid_t pid = fork();
@@ -44,19 +29,40 @@ void execute(struct pipeline *pipeline)
     }
 }
 
+int evaluate(char *line)
+{
+    struct pipeline *pipeline = pipeline_build(line);
+    if (pipeline != NULL)
+    {
+        execute(pipeline);
+        pipeline_free(pipeline);
+        return 1; // Continue the shell loop
+    }
+    else
+    {
+        printf("Command not supported: \n");
+        return 0; // Exit the shell loop
+    }
+}
+
 void shellLoop()
 {
-    char **args;
+    char line[MAX_LINE_LENGTH];
     int status = 1;
 
     do
     {
         printf("my_shell$ ");
-        pipeline_build(args);
-        status = evaluate(args);
-
-        pipeline_free(args);
-        free(args);
+        if (fgets(line, MAX_LINE_LENGTH, stdin) != NULL)
+        {
+            // Remove newline character from end of line
+            size_t len = strlen(line);
+            if (len > 0 && line[len - 1] == '\n')
+            {
+                line[len - 1] = '\0';
+            }
+        }
+        status = evaluate(line);
 
     } while (status);
 }
