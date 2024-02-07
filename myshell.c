@@ -61,8 +61,12 @@ void shellLoop()
             {
                 line[len - 1] = '\0';
             }
+            status = evaluate(line);
         }
-        status = evaluate(line);
+        else
+        {
+            status = 0;
+        }
 
     } while (status);
 }
