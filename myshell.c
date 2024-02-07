@@ -5,28 +5,80 @@
 #include <string.h>
 
 #include "myshell_parser.h"
+
+#define READ_END 0
+#define WRITE_END 1
+
 void execute(struct pipeline *pipeline)
 {
-    pid_t pid = fork();
-    if (pid == 0)
+    // fd standing for file descriptor, being array with len() of 2 for read/write.
+    int fd[2];
+    pid_t pid;
+    int inputFd = 0;
+    // pipeline->commands is the next command in a pipeline. NULL if there is None.
+    struct pipeline_command *command = pipeline->commands;
+
+    // Provide looping to iterate over each command in pipeline
+    while (command != NULL)
     {
-        // Child process to execute
-        if (execvp(pipeline->commands->command_args[0], pipeline->commands->command_args) == -1)
+        pipe(fd);
+
+        if ((pid = fork()) == 0)
         {
-            perror("my_shell");
+            if (inputFd != 0)
+            {
+                dup2(inputFd, STDIN_FILENO);
+                close(inputFd);
+            }
+            if (command->next != NULL)
+            {
+                dup2(fd[WRITE_END], STDOUT_FILENO);
+                close(fd[WRITE_END]);
+            }
+            close(fd[READ_END]);
+
+            if (execvp(command->command_args[0], command->command_args) < 0)
+            {
+                perror("my_shell");
+                exit(1);
+            }
         }
-        exit(EXIT_FAILURE);
+        else
+        {
+            // Want the parent to wait for its child to finish
+            wait(NULL);
+            if (inputFd != 0)
+            {
+                close(inputFd);
+            }
+
+            close(fd[WRITE_END]);
+
+            // Want the next child to read from now this end now
+            inputFd = fd[READ_END];
+            command = command->next;
+        }
     }
-    else if (pid < 0)
-    {
-        // Error forking
-        perror("my_shell");
-    }
-    else
-    {
-        // Parent process
-        wait(NULL);
-    }
+
+    // if (pid == 0)
+    // {
+    //     // Child process to execute
+    //     if (execvp(pipeline->commands->command_args[0], pipeline->commands->command_args) == -1)
+    //     {
+    //         perror("my_shell");
+    //     }
+    //     exit(EXIT_FAILURE);
+    // }
+    // else if (pid < 0)
+    // {
+    //     // Error forking
+    //     perror("my_shell");
+    // }
+    // else
+    // {
+    //     // Parent process
+    //     wait(NULL);
+    // }
 }
 
 int evaluate(char *line)
