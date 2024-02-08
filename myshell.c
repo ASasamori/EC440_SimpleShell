@@ -19,7 +19,7 @@ void execute(struct pipeline *pipeline)
 
     pid_t pid;
     int inputFd = 0;
-    int outputFd = 1; // Output File Descriptor, not sure why it is 1 though.
+    // int outputFd = 1; // Output File Descriptor, not sure why it is 1 though.
     // pipeline->commands is the next command in a pipeline. NULL if there is None.
     struct pipeline_command *command = pipeline->commands;
 
@@ -43,11 +43,11 @@ void execute(struct pipeline *pipeline)
             }
             if (command->redirect_out_path != NULL)
             {
-                inputFd = open(command->redirect_out_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+                int outputFd = open(command->redirect_out_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
                 if (outputFd == -1)
                 {
                     perror("my_shell");
-                    exit(EXIT_FAILURE);
+                    exit(1);
                 }
                 dup2(outputFd, STDOUT_FILENO);
                 close(outputFd);
@@ -66,6 +66,7 @@ void execute(struct pipeline *pipeline)
                 close(fd[WRITE_END]);
             }
             close(fd[READ_END]);
+            close(fd[WRITE_END]); // Should catch the error in the redirection, now won't be displaying 2 error messages anymore
 
             if (execvp(command->command_args[0], command->command_args) < 0)
             {
@@ -77,6 +78,10 @@ void execute(struct pipeline *pipeline)
         {
             // Want the parent to wait for its child to finish
             wait(NULL);
+            if (inputFd != 0)
+            {
+                close(inputFd);
+            }
             close(fd[WRITE_END]);
             // Got rid of closing the inputFd, always just want to make sure can read the new input
 
