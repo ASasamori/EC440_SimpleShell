@@ -6,6 +6,8 @@
 
 #include <fcntl.h> // Used for using the flags for redirection in/out?
 
+#include <signal.h> // Used for signals, which handles zombies
+
 #include "myshell_parser.h"
 
 // Assigned global variables for the File Descriptors
@@ -165,7 +167,16 @@ void shellLoop()
 
 int main(int argc, char **argv)
 {
-    // struct sig
+    struct sigaction sa;
+    sa.sa_handler = sigchldHandler; // Reap all dead processes
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_RESTART;
+    if (sigaction(SIGCHLD, &sa, NULL) == -1)
+    {
+        perror("sigaction");
+        exit(1);
+    }
+
     if (argc > 1 && strcmp(argv[1], "-n") == 0)
     {
         prompt = ""; // Empty for when to run ./myshell -n
