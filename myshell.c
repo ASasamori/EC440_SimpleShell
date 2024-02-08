@@ -12,6 +12,8 @@
 #define READ_END 0
 #define WRITE_END 1
 
+char *prompt; // Global variable to help set the -n functionality and print myshell$
+
 void execute(struct pipeline *pipeline)
 {
     // fd standing for file descriptor, being array with len() of 2 for read/write.
@@ -112,7 +114,7 @@ void shellLoop()
 
     do
     {
-        printf("my_shell$ ");
+        printf("%s", prompt); // Had to look this up, don't really know how this will handle myshell -n but let's try
         if (fgets(line, MAX_LINE_LENGTH, stdin) != NULL)
         {
             // Remove newline character from end of line
@@ -133,6 +135,14 @@ void shellLoop()
 
 int main(int argc, char **argv)
 {
+    if (argc > 1 && strcmp(argv[1], "-n") == 0)
+    {
+        prompt = "";
+    }
+    else
+    {
+        prompt = "myshell$ ";
+    }
     shellLoop();
     return EXIT_SUCCESS;
 }
