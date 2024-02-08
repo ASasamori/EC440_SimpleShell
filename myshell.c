@@ -52,9 +52,6 @@ void execute(struct pipeline *pipeline)
                 dup2(outputFd, STDOUT_FILENO);
                 close(outputFd);
             }
-            if (command->redirect_out_path != NULL)
-            {
-            }
             if (inputFd != 0)
             {
                 dup2(inputFd, STDIN_FILENO);
