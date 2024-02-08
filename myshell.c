@@ -123,6 +123,7 @@ void shellLoop()
     do
     {
         printf("%s", prompt); // Had to look this up, don't really know how this will handle myshell -n but let's try
+        fflush(stdout);
         if (fgets(line, MAX_LINE_LENGTH, stdin) != NULL)
         {
             // Remove newline character from end of line
