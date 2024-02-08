@@ -32,33 +32,40 @@ void execute(struct pipeline *pipeline)
 
         if ((pid = fork()) == 0)
         {
+            // <
             if (command->redirect_in_path != NULL)
             {
                 inputFd = open(command->redirect_in_path, O_RDONLY);
                 if (inputFd == -1)
                 {
-                    perror("my_shell");
+                    fprintf(stderr, "ERROR: Failed to open file %s\n", command->redirect_in_path);
                     exit(EXIT_FAILURE);
                 }
                 dup2(inputFd, STDIN_FILENO);
                 close(inputFd);
             }
+
+            // >
             if (command->redirect_out_path != NULL)
             {
                 int outputFd = open(command->redirect_out_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
                 if (outputFd == -1)
                 {
-                    perror("my_shell");
-                    exit(1);
+                    fprintf(stderr, "ERROR: Failed to open the file %s\n", command->redirect_out_path);
+                    exit(EXIT_FAILURE);
                 }
                 dup2(outputFd, STDOUT_FILENO);
                 close(outputFd);
             }
+
+            // Further help with >
             if (inputFd != 0)
             {
                 dup2(inputFd, STDIN_FILENO);
                 close(inputFd);
             }
+
+            // | (Piping lol)
             if (command->next != NULL)
             {
                 dup2(fd[WRITE_END], STDOUT_FILENO);
@@ -67,20 +74,29 @@ void execute(struct pipeline *pipeline)
             close(fd[READ_END]);
             close(fd[WRITE_END]); // Should catch the error in the redirection, now won't be displaying 2 error messages anymore
 
+            // ls, pwd, other basic commands
             if (execvp(command->command_args[0], command->command_args) < 0)
             {
-                perror("my_shell");
-                exit(1);
+                fprintf(stderr, "ERROR: failed to execute command %2\n", command->command_args[0]);
+                exit(EXIT_FAILURE);
             }
         }
         else
         {
+
+            // &
             if (pipeline->is_background)
             {
                 printf("The pid of  %d is obviously running in the background because you appended an ampersand to the end.\n", pid);
             }
             else
             {
+                int status;
+                waitpid(pid, &status, 0);
+                if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
+                {
+                    printf("ERROR: Command failed with status %d\n", WEXITSTATUS(status));
+                }
                 // Want the parent to wait for its child to finish
                 wait(NULL);
             }
@@ -106,24 +122,29 @@ int evaluate(char *line)
     {
         execute(pipeline);
         pipeline_free(pipeline);
-        return 1; // Continue the shell loop
+        return 1; // Continue loop
     }
     else
     {
         printf("Command not supported: \n");
-        return 0; // Exit the shell loop
+        return 0; // Exit loop
     }
 }
 
+void sigchldHandler(int signal)
+{
+    while (waitpid(-1, NULL, WNOHANG) > 0)
+        ;
+}
 void shellLoop()
 {
-    char line[MAX_LINE_LENGTH];
-    int status = 1;
+    char line[MAX_LINE_LENGTH]; // Allocate set amount of characters for input
+    int status = 1;             // Parameter for whether or not shell loop can run or not
 
     do
     {
         printf("%s", prompt); // Had to look this up, don't really know how this will handle myshell -n but let's try
-        fflush(stdout);
+        // fflush(stdout); Thought this line was to help the background processes but realized that it's actually from the zombies
         if (fgets(line, MAX_LINE_LENGTH, stdin) != NULL)
         {
             // Remove newline character from end of line
@@ -144,9 +165,10 @@ void shellLoop()
 
 int main(int argc, char **argv)
 {
+    // struct sig
     if (argc > 1 && strcmp(argv[1], "-n") == 0)
     {
-        prompt = "";
+        prompt = ""; // Empty for when to run ./myshell -n
     }
     else
     {
