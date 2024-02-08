@@ -6,9 +6,9 @@
 
 #include <fcntl.h> // Used for using the flags for redirection in/out?
 
-#include <signal.h> // Used for signals, which handles zombies
+#include <signal.h> // Used for signal handling
 
-#include <errno.h>
+#include <errno.h> // Used to report error conditions
 
 #include "myshell_parser.h"
 
@@ -25,7 +25,6 @@ void execute(struct pipeline *pipeline)
 
     pid_t pid;
     int inputFd = 0;
-    // int outputFd = 1; // Output File Descriptor, not sure why it is 1 though.
     // pipeline->commands is the next command in a pipeline. NULL if there is None.
     struct pipeline_command *command = pipeline->commands;
 
@@ -35,7 +34,7 @@ void execute(struct pipeline *pipeline)
         pipe(fd);
 
         if ((pid = fork()) == 0)
-        {
+
             // <
             if (command->redirect_in_path != NULL)
             {
@@ -49,42 +48,43 @@ void execute(struct pipeline *pipeline)
                 close(inputFd);
             }
 
-            // >
-            if (command->redirect_out_path != NULL)
+        // >
+        if (command->redirect_out_path != NULL)
+        {
+            int outputFd = open(command->redirect_out_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (outputFd == -1)
             {
-                int outputFd = open(command->redirect_out_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-                if (outputFd == -1)
-                {
-                    fprintf(stderr, "ERROR: Failed to open the file %s\n", command->redirect_out_path);
-                    exit(EXIT_FAILURE);
-                }
-                dup2(outputFd, STDOUT_FILENO);
-                close(outputFd);
-            }
-
-            // Further help with >
-            if (inputFd != 0)
-            {
-                dup2(inputFd, STDIN_FILENO);
-                close(inputFd);
-            }
-
-            // | (Piping lol)
-            if (command->next != NULL)
-            {
-                dup2(fd[WRITE_END], STDOUT_FILENO);
-                close(fd[WRITE_END]);
-            }
-            close(fd[READ_END]);
-            close(fd[WRITE_END]); // Should catch the error in the redirection, now won't be displaying 2 error messages anymore
-
-            // ls, pwd, other basic commands
-            if (execvp(command->command_args[0], command->command_args) < 0)
-            {
-                fprintf(stderr, "ERROR: failed to execute command %s\n", command->command_args[0]);
+                fprintf(stderr, "ERROR: Failed to open the file %s\n", command->redirect_out_path);
                 exit(EXIT_FAILURE);
             }
+            dup2(outputFd, STDOUT_FILENO);
+            close(outputFd);
         }
+
+        // Further help with >
+        if (inputFd != 0)
+        {
+            dup2(inputFd, STDIN_FILENO);
+            close(inputFd);
+        }
+
+        // |
+        if (command->next != NULL)
+        {
+            dup2(fd[WRITE_END], STDOUT_FILENO);
+            close(fd[WRITE_END]);
+        }
+        // Need to close both the read and write ends of the file descriptor, to allow looping to take place
+        close(fd[READ_END]);
+        close(fd[WRITE_END]); // Should catch the error in the redirection, now won't be displaying 2 error messages anymore
+
+        // ls, pwd, other basic commands
+        if (execvp(command->command_args[0], command->command_args) < 0)
+        {
+            fprintf(stderr, "ERROR: failed to execute command %s\n", command->command_args[0]);
+            exit(EXIT_FAILURE);
+        }
+
         else
         {
             if (!pipeline->is_background)
@@ -103,7 +103,6 @@ void execute(struct pipeline *pipeline)
                 close(inputFd);
             }
             close(fd[WRITE_END]);
-            // Got rid of closing the inputFd, always just want to make sure can read the new input
 
             // Want the next child to read from the end
             inputFd = fd[READ_END];
@@ -166,8 +165,9 @@ void shellLoop()
 
 int main(int argc, char **argv)
 {
+    // Had to look up all this signal handling logic
     struct sigaction sa;
-    sa.sa_handler = sigchldHandler; // Reap all dead processes
+    sa.sa_handler = sigchldHandler;
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = SA_RESTART;
     if (sigaction(SIGCHLD, &sa, NULL) == -1)
