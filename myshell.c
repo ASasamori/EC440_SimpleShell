@@ -75,18 +75,25 @@ void execute(struct pipeline *pipeline)
         }
         else
         {
-            // Want the parent to wait for its child to finish
-            wait(NULL);
-            if (inputFd != 0)
+            if (pipeline->is_background)
             {
-                close(inputFd);
+                printf("The pid of  %d is obviously running in the background because you appended a percent sign to the end.\n", pid);
             }
-            close(fd[WRITE_END]);
-            // Got rid of closing the inputFd, always just want to make sure can read the new input
+            else
+            {
+                // Want the parent to wait for its child to finish
+                wait(NULL);
+                if (inputFd != 0)
+                {
+                    close(inputFd);
+                }
+                close(fd[WRITE_END]);
+                // Got rid of closing the inputFd, always just want to make sure can read the new input
 
-            // Want the next child to read from the end
-            inputFd = fd[READ_END];
-            command = command->next;
+                // Want the next child to read from the end
+                inputFd = fd[READ_END];
+                command = command->next;
+            }
         }
     }
 }
