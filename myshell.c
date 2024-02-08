@@ -6,6 +6,7 @@
 
 #include "myshell_parser.h"
 
+// Assigned global variables for the File Descriptors
 #define READ_END 0
 #define WRITE_END 1
 
@@ -13,6 +14,7 @@ void execute(struct pipeline *pipeline)
 {
     // fd standing for file descriptor, being array with len() of 2 for read/write.
     int fd[2];
+
     pid_t pid;
     int inputFd = 0;
     // pipeline->commands is the next command in a pipeline. NULL if there is None.
@@ -25,6 +27,12 @@ void execute(struct pipeline *pipeline)
 
         if ((pid = fork()) == 0)
         {
+            if (command->redirect_in_path != NULL)
+            {
+            }
+            if (command->redirect_out_path != NULL)
+            {
+            }
             if (inputFd != 0)
             {
                 dup2(inputFd, STDIN_FILENO);
@@ -54,31 +62,11 @@ void execute(struct pipeline *pipeline)
 
             close(fd[WRITE_END]);
 
-            // Want the next child to read from now this end now
+            // Want the next child to read from the end
             inputFd = fd[READ_END];
             command = command->next;
         }
     }
-
-    // if (pid == 0)
-    // {
-    //     // Child process to execute
-    //     if (execvp(pipeline->commands->command_args[0], pipeline->commands->command_args) == -1)
-    //     {
-    //         perror("my_shell");
-    //     }
-    //     exit(EXIT_FAILURE);
-    // }
-    // else if (pid < 0)
-    // {
-    //     // Error forking
-    //     perror("my_shell");
-    // }
-    // else
-    // {
-    //     // Parent process
-    //     wait(NULL);
-    // }
 }
 
 int evaluate(char *line)

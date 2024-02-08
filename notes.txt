@@ -18,3 +18,15 @@ wait pid-1, don't care what the child is
 // close the pipe so the parent is doing the pipe command
 // Make sure to not blindly malloc a command to make sure it works
 // Redirect need to use dupe
+
+
+This shit probably for the 2nd assignment but idrk what it does rn i'm ngl
+
+if (getJump(thread1_jumpbuffer) == 0){
+    // got here after sacking state (thread1)
+    // choose the next threat to run (thread 2)
+    LongJump(Thread2.Jumpbufffer, NON-ZERO);
+} else {
+    // continue running thread 2
+    return;
+}
