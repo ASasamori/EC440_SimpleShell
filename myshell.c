@@ -8,6 +8,8 @@
 
 #include <signal.h> // Used for signals, which handles zombies
 
+#include <errno.h>
+
 #include "myshell_parser.h"
 
 // Assigned global variables for the File Descriptors
@@ -85,13 +87,7 @@ void execute(struct pipeline *pipeline)
         }
         else
         {
-
-            // &
-            if (pipeline->is_background)
-            {
-                printf("The pid of %d is obviously running in the background because you appended an ampersand to the end.\n", pid);
-            }
-            else
+            if (!pipeline->is_background)
             {
                 int status;
                 waitpid(pid, &status, 0);
@@ -99,7 +95,6 @@ void execute(struct pipeline *pipeline)
                 {
                     printf("ERROR: Command failed with status %d\n", WEXITSTATUS(status));
                 }
-                // Want the parent to wait for its child to finish
                 wait(NULL);
             }
 
@@ -135,9 +130,13 @@ int evaluate(char *line)
 
 void sigchldHandler(int signal)
 {
-    while (waitpid(-1, NULL, WNOHANG) > 0)
-        ;
+    int saved_errno = errno;
+    while (waitpid((pid_t)(-1), NULL, WNOHANG) > 0)
+    {
+    }
+    errno = saved_errno;
 }
+
 void shellLoop()
 {
     char line[MAX_LINE_LENGTH]; // Allocate set amount of characters for input
