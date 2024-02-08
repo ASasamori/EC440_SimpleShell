@@ -79,7 +79,7 @@ void execute(struct pipeline *pipeline)
             // ls, pwd, other basic commands
             if (execvp(command->command_args[0], command->command_args) < 0)
             {
-                fprintf(stderr, "ERROR: failed to execute command %2\n", command->command_args[0]);
+                fprintf(stderr, "ERROR: failed to execute command %s\n", command->command_args[0]);
                 exit(EXIT_FAILURE);
             }
         }
@@ -89,7 +89,7 @@ void execute(struct pipeline *pipeline)
             // &
             if (pipeline->is_background)
             {
-                printf("The pid of  %d is obviously running in the background because you appended an ampersand to the end.\n", pid);
+                printf("The pid of %d is obviously running in the background because you appended an ampersand to the end.\n", pid);
             }
             else
             {
