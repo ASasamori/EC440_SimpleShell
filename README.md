@@ -14,3 +14,5 @@ Two example test programs that exercise the interface of the parser, discussed [
 
 Got information from the blog of https://brennan.io/2015/01/16/write-a-shell-in-c/
 Subsequently, used the code from the blog as a guideline: https://github.com/brenns10/lsh/blob/407938170e8b40d231781576e05282a41634848c/src/main.c
+
+Got help for implementing redirection here: https://stackoverflow.com/questions/11515399/implementing-shell-in-c-and-need-help-handling-input-output-redirection
