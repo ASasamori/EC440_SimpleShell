@@ -77,23 +77,24 @@ void execute(struct pipeline *pipeline)
         {
             if (pipeline->is_background)
             {
-                printf("The pid of  %d is obviously running in the background because you appended a percent sign to the end.\n", pid);
+                printf("The pid of  %d is obviously running in the background because you appended an ampersand to the end.\n", pid);
             }
             else
             {
                 // Want the parent to wait for its child to finish
                 wait(NULL);
-                if (inputFd != 0)
-                {
-                    close(inputFd);
-                }
-                close(fd[WRITE_END]);
-                // Got rid of closing the inputFd, always just want to make sure can read the new input
-
-                // Want the next child to read from the end
-                inputFd = fd[READ_END];
-                command = command->next;
             }
+
+            if (inputFd != 0)
+            {
+                close(inputFd);
+            }
+            close(fd[WRITE_END]);
+            // Got rid of closing the inputFd, always just want to make sure can read the new input
+
+            // Want the next child to read from the end
+            inputFd = fd[READ_END];
+            command = command->next;
         }
     }
 }
