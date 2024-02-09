@@ -34,6 +34,7 @@ void execute(struct pipeline *pipeline)
         pipe(fd);
 
         if ((pid = fork()) == 0)
+        {
 
             // <
             if (command->redirect_in_path != NULL)
@@ -48,41 +49,42 @@ void execute(struct pipeline *pipeline)
                 close(inputFd);
             }
 
-        // >
-        if (command->redirect_out_path != NULL)
-        {
-            int outputFd = open(command->redirect_out_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-            if (outputFd == -1)
+            // >
+            if (command->redirect_out_path != NULL)
             {
-                fprintf(stderr, "ERROR: Failed to open the file %s\n", command->redirect_out_path);
+                int outputFd = open(command->redirect_out_path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+                if (outputFd == -1)
+                {
+                    fprintf(stderr, "ERROR: Failed to open the file %s\n", command->redirect_out_path);
+                    exit(EXIT_FAILURE);
+                }
+                dup2(outputFd, STDOUT_FILENO);
+                close(outputFd);
+            }
+
+            // Further help with >
+            if (inputFd != 0)
+            {
+                dup2(inputFd, STDIN_FILENO);
+                close(inputFd);
+            }
+
+            // |
+            if (command->next != NULL)
+            {
+                dup2(fd[WRITE_END], STDOUT_FILENO);
+                close(fd[WRITE_END]);
+            }
+            // Need to close both the read and write ends of the file descriptor, to allow looping to take place
+            close(fd[READ_END]);
+            close(fd[WRITE_END]); // Should catch the error in the redirection, now won't be displaying 2 error messages anymore
+
+            // ls, pwd, other basic commands
+            if (execvp(command->command_args[0], command->command_args) < 0)
+            {
+                fprintf(stderr, "ERROR: failed to execute command %s\n", command->command_args[0]);
                 exit(EXIT_FAILURE);
             }
-            dup2(outputFd, STDOUT_FILENO);
-            close(outputFd);
-        }
-
-        // Further help with >
-        if (inputFd != 0)
-        {
-            dup2(inputFd, STDIN_FILENO);
-            close(inputFd);
-        }
-
-        // |
-        if (command->next != NULL)
-        {
-            dup2(fd[WRITE_END], STDOUT_FILENO);
-            close(fd[WRITE_END]);
-        }
-        // Need to close both the read and write ends of the file descriptor, to allow looping to take place
-        close(fd[READ_END]);
-        close(fd[WRITE_END]); // Should catch the error in the redirection, now won't be displaying 2 error messages anymore
-
-        // ls, pwd, other basic commands
-        if (execvp(command->command_args[0], command->command_args) < 0)
-        {
-            fprintf(stderr, "ERROR: failed to execute command %s\n", command->command_args[0]);
-            exit(EXIT_FAILURE);
         }
 
         else
