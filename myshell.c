@@ -132,6 +132,7 @@ int evaluate(char *line)
 void sigchldHandler(int signal)
 {
     int saved_errno = errno;
+    // Allow infinite waiting to allow for signal handling
     while (waitpid((pid_t)(-1), NULL, WNOHANG) > 0)
     {
     }
@@ -184,7 +185,7 @@ int main(int argc, char **argv)
     }
     else
     {
-        prompt = "myshell$ ";
+        prompt = "myshell$ "; // Want the shell to print this everytime, like in terminal for "> "
     }
     shellLoop();
     return EXIT_SUCCESS;
